@@ -1,6 +1,11 @@
 #include <cassert>
 #include <cstring>
 
+#include <iostream>
+
+#include <thread>
+#include <vector>
+
 #include "MyString.h"
 
 using namespace std;
@@ -185,9 +190,175 @@ void test() {
 	assert(strcmp(s142.GetCString(), "A TO Z") == 0);
 }
 
+
+void append(MyString& myString, const char* s) {
+    myString.Append(s);
+}
+
+void threadSafeAppendTest()
+{
+	MyString myString("Initial");
+    const char* toAppend = "ABC";
+
+    std::vector<std::thread> threads;
+
+
+	int threadCount = 10;
+    for (int i = 0; i < threadCount; ++i) {
+        threads.emplace_back(append, std::ref(myString), toAppend);
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    char expectedResult[256] = "Initial";
+    for (int i = 0; i < threadCount; ++i) {
+        strcat(expectedResult, toAppend);
+    }
+
+    assert(strcmp(myString.GetCString(), expectedResult) == 0);
+}
+
+void interleave(MyString& myString, const char* s) {
+    myString.Interleave(s);
+}
+
+void threadSafeInterleaveTest()
+{
+    MyString myString("Initial");
+    const char* toInterleave = "12345678";
+
+    std::vector<std::thread> threads;
+
+    int threadCount = 10;
+    for (int i = 0; i < threadCount; ++i) {
+        threads.emplace_back(interleave, std::ref(myString), toInterleave);
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    char expectedResult[512] = "Initial";
+    char temp[512] = "";
+
+    for (int i = 0; i < threadCount; ++i) {
+        const char* current = expectedResult;
+        const char* append = toInterleave;
+        int lenCurrent = strlen(current);
+        int lenAppend = strlen(append);
+
+        int k = 0;
+        for (int j = 0; j < lenCurrent || j < lenAppend; ++j) {
+            if (j < lenCurrent) 
+			{
+				temp[k++] = current[j];
+			}
+            if (j < lenAppend) 
+			{
+				temp[k++] = append[j];
+			}
+        }
+        temp[k] = '\0'; 
+
+        strcpy(expectedResult, temp);
+    }
+
+    assert(strcmp(myString.GetCString(), expectedResult) == 0);
+}
+
+void removeAt(MyString& myString, int index) {
+    myString.RemoveAt(index);
+}
+
+void threadSafeRemoveAtTest() {
+    MyString myString("ABCDEFGHIJK");
+
+    std::vector<std::thread> threads;
+
+	int threadCount = 10;
+    for (int i = 0; i < threadCount; ++i) {
+		threads.emplace_back(removeAt, std::ref(myString), 0); // 0번 인덱스를, 10번 삭제
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+	
+	const char* expectedResult = "K";
+    assert(strcmp(myString.GetCString(), expectedResult) == 0);
+}
+
+void reverseString(MyString& myString)
+{
+	myString.Reverse();
+}
+
+void threadSafeReverseTest()
+{
+	MyString myString("ABCDEFGHIJK");
+
+    std::vector<std::thread> threads;
+
+	int threadCount = 9; // 홀수번 뒤집어야 문자열이 뒤집힘
+    for (int i = 0; i < threadCount; ++i) {
+        threads.emplace_back(reverseString, std::ref(myString));
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+	const char* expectedResult = "KJIHGFEDCBA";
+    assert(strcmp(myString.GetCString(), expectedResult) == 0);
+}
+
+void toLower(MyString& myString) {
+    myString.ToLower();
+}
+
+void toUpper(MyString& myString) {
+    myString.ToUpper();
+}
+
+void threadSafeLowerUpperTest() {
+    MyString myString("AbCdEfGhIjK");
+
+    std::vector<std::thread> threads;
+    
+	int threadCount = 10;
+    for (int i = 0; i < threadCount; ++i) {
+        threads.emplace_back(toLower, std::ref(myString));
+		threads.emplace_back(toUpper, std::ref(myString));
+    }
+    
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    const char* expectedResult1 = "ABCDEFGHIJK";
+    const char* expectedResult2 = "abcdefghijk";
+    assert(strcmp(myString.GetCString(), expectedResult1) == 0 || strcmp(myString.GetCString(), expectedResult2) == 0); // 둘중 하나의 결과로 나와야함
+}
+
+void runThreadSafeTests() {
+   	threadSafeAppendTest();
+	threadSafeInterleaveTest();
+	threadSafeRemoveAtTest();
+	threadSafeReverseTest();
+	threadSafeLowerUpperTest();
+}
+
 int main(void)
 {
+	// 기본 기능 테스트
 	test();
 
+	// thread-safety 테스트
+	for (int i = 0; i < 100; ++i) {
+    	runThreadSafeTests();
+	}
+	
 	return 0;
 }

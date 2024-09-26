@@ -1,6 +1,8 @@
 #ifndef MY_STRING_H
 #define MY_STRING_H
 
+#include <mutex>
+
 class MyString
 {
 public:
@@ -36,6 +38,8 @@ private:
 	char* mCString;
 	unsigned int mLength;
 	unsigned int mCapacity;
+
+    mutable std::mutex mMutex;
 };
 
 #endif // MY_STRING_H
