@@ -6,6 +6,8 @@ MyString::MyString(const char* s)
 	: mCString(nullptr)
 	, mLength(0)
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	mLength = strlen(s);
 	mCapacity = mLength;
 
@@ -19,6 +21,8 @@ MyString::MyString(const MyString& other)
 	, mLength(other.mLength)
 	, mCapacity(other.mCapacity)
 {
+	std::lock_guard<std::mutex> lock(other.mMutex);
+
 	mCString = new char[mLength + 1];
 	strcpy(mCString, other.mCString);
 	mCString[mLength] = '\0';
@@ -26,6 +30,8 @@ MyString::MyString(const MyString& other)
 
 MyString::~MyString()
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	delete[] mCString;
 }
 
@@ -42,11 +48,15 @@ int MyString::strlen(const char* str)
 
 unsigned int MyString::GetLength() const
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	return mLength;
 }
 
 const char* const MyString::GetCString() const
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	return mCString;
 }
 
@@ -69,6 +79,8 @@ void MyString::reserve(unsigned int capacity)
 
 void MyString::Append(const char* s)
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	if (*s == '\0') 
 	{
 		return;
@@ -100,6 +112,8 @@ void MyString::Append(const char* s)
 
 const  int MyString::IndexOf(const char* s) const
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	if (*s == '\0') 
 	{
 		return 0;
@@ -129,6 +143,8 @@ const  int MyString::IndexOf(const char* s) const
 
 const int MyString::LastIndexOf(const char* s) const
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	if (*s == '\0') 
 	{
 		return mLength;
@@ -159,6 +175,8 @@ const int MyString::LastIndexOf(const char* s) const
 
 void MyString::Interleave(const char* s)
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	if (*s == '\0') 
 	{
 		return;
@@ -208,6 +226,8 @@ void MyString::Interleave(const char* s)
 
 const bool MyString::RemoveAt(const unsigned int i)
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	if (mLength == 0 || i > mLength - 1) 
 	{
 		return false;
@@ -216,6 +236,7 @@ const bool MyString::RemoveAt(const unsigned int i)
 	{
 		char* newCString = new char[mLength];
 		char* copiedNewCString = newCString;
+		
 		const char* copiedCString = mCString;
 		while (*copiedCString != '\0') 
 		{
@@ -247,11 +268,13 @@ void MyString::PadLeft(const unsigned int totalLength)
 
 void MyString::PadLeft(const unsigned int totalLength, const char c)
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	if (totalLength <= mLength) 
 	{
 		return;
 	}
-	
+
 	{
 		char* newCString = new char[totalLength + 1];
 		char* copiedNewCString = newCString;
@@ -292,10 +315,12 @@ void MyString::PadRight(const unsigned int totalLength)
 
 void MyString::PadRight(const unsigned int totalLength, const char c)
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	if (totalLength <= mLength) 
 	{
 		return;
-	}
+	}	
 
 	{
 		char* newCString = new char[totalLength + 1];
@@ -341,6 +366,8 @@ void MyString::strcpy(char* dest, const char* src)
 
 void MyString::Reverse()
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	char* front = mCString;
 	char* end = mCString + mLength - 1;
 
@@ -360,6 +387,8 @@ void MyString::Reverse()
 
 void MyString::ToLower()
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	char* copiedCString = mCString;
 	while (*copiedCString != '\0') 
 	{
@@ -374,6 +403,8 @@ void MyString::ToLower()
 
 void MyString::ToUpper()
 {
+	std::lock_guard<std::mutex> lock(mMutex);
+
 	char* copiedCString = mCString;
 	while (*copiedCString != '\0') 
 	{
@@ -388,6 +419,9 @@ void MyString::ToUpper()
 
 MyString MyString::operator+(const MyString& other) const
 {
+	std::lock_guard<std::mutex> lock1(mMutex);
+	std::lock_guard<std::mutex> lock2(other.mMutex);
+	
 	MyString str = MyString(mCString);
 	str.Append(other.mCString);
 	return str;
@@ -395,6 +429,9 @@ MyString MyString::operator+(const MyString& other) const
 
 MyString& MyString::operator=(const MyString& rhs)
 {
+	std::lock_guard<std::mutex> lock1(mMutex);
+	std::lock_guard<std::mutex> lock2(rhs.mMutex);
+
 	if (this == &rhs)
 	{
 		return *this;
@@ -415,6 +452,9 @@ MyString& MyString::operator=(const MyString& rhs)
 
 const bool MyString::operator==(const MyString& rhs) const
 {
+	std::lock_guard<std::mutex> lock1(mMutex);
+	std::lock_guard<std::mutex> lock2(rhs.mMutex);
+
 	if (mLength != rhs.mLength) 
 	{
 		return false;
