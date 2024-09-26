@@ -2,12 +2,12 @@
 
 #include "MyString.h"
 
-
 MyString::MyString(const char* s)
 	: mCString(nullptr)
 	, mLength(0)
 {
 	mLength = strlen(s);
+	mCapacity = mLength;
 
 	mCString = new char[mLength + 1];
 	strcpy(mCString, s);
@@ -17,6 +17,7 @@ MyString::MyString(const char* s)
 MyString::MyString(const MyString& other)
 	: mCString(nullptr)
 	, mLength(other.mLength)
+	, mCapacity(other.mCapacity)
 {
 	mCString = new char[mLength + 1];
 	strcpy(mCString, other.mCString);
@@ -49,6 +50,23 @@ const char* const MyString::GetCString() const
 	return mCString;
 }
 
+void MyString::reserve(unsigned int capacity)
+{
+	if (mCapacity >= capacity)
+	{
+		return;
+	}
+	mCapacity = capacity;
+
+	char* newCString = new char[mCapacity];
+
+	assert(mCString != nullptr);
+	strcpy(newCString, mCString);
+
+	delete[] mCString;
+	mCString = newCString;
+}
+
 void MyString::Append(const char* s)
 {
 	if (*s == '\0') 
@@ -59,14 +77,20 @@ void MyString::Append(const char* s)
 	int len = strlen(s);
 	int newLength = mLength + len;
 
+	if (newLength + 1 >= mCapacity)
 	{
-		char* newCString = new char[newLength + 1];
-		strcpy(newCString, mCString);
-		strcpy(newCString + mLength, s);
-		newCString[newLength] = '\0';
-		
-		delete[] mCString;
-		mCString = newCString;
+		unsigned int newCapacity = mCapacity * 1.5; // vector-like
+		if (newCapacity == mCapacity) 
+		{
+			++newCapacity;
+		}
+
+		reserve(newCapacity);
+	}
+
+	{
+		strcpy(mCString + mLength, s);
+		mCString[newLength] = '\0';
 	}
 
 	{
@@ -168,6 +192,18 @@ void MyString::Interleave(const char* s)
 		delete[] mCString;
 		mCString = newCString;
 	}
+
+	{
+		if (newLength + 1 >= mCapacity)
+		{
+			unsigned int newCapacity = mCapacity * 1.5; // vector-like
+			if (newCapacity == mCapacity) 
+			{
+				++newCapacity;
+			}
+			mCapacity = newCapacity;
+		}
+	}
 }
 
 const bool MyString::RemoveAt(const unsigned int i)
@@ -236,6 +272,16 @@ void MyString::PadLeft(const unsigned int totalLength, const char c)
 
 	{
 		mLength = totalLength;
+
+		if (totalLength + 1 >= mCapacity)
+		{
+			unsigned int newCapacity = mCapacity * 1.5; // vector-like
+			if (newCapacity == mCapacity) 
+			{
+				++newCapacity;
+			}
+			mCapacity = newCapacity;
+		}
 	}
 }
 
@@ -272,6 +318,16 @@ void MyString::PadRight(const unsigned int totalLength, const char c)
 
 	{
 		mLength = totalLength;
+
+		if (totalLength + 1 >= mCapacity)
+		{
+			unsigned int newCapacity = mCapacity * 1.5; // vector-like
+			if (newCapacity == mCapacity) 
+			{
+				++newCapacity;
+			}
+			mCapacity = newCapacity;
+		}
 	}
 }
 
@@ -346,14 +402,12 @@ MyString& MyString::operator=(const MyString& rhs)
 
 	{
 		mLength = rhs.mLength;
+
+		mCapacity = rhs.mCapacity;
 	}
 
 	{
-		delete[] mCString;
-
-		mCString = new char[mLength + 1];
-		strcpy(mCString, rhs.mCString);
-		mCString[mLength] = '\0';
+		reserve(mCapacity);
 	}
 
 	return *this;

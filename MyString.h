@@ -31,8 +31,11 @@ private:
 	static int strlen(const char* str);
 	static void strcpy(char* dest, const char* src);
 
+	void reserve(unsigned int capacity);
+
 	char* mCString;
 	unsigned int mLength;
+	unsigned int mCapacity;
 };
 
 #endif // MY_STRING_H
