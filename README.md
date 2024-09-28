@@ -70,7 +70,7 @@
                         unsigned int value_{};
                     };
                     ``` 
-
+---
   
 # 정적 라이브러리 
 ## 빌드
@@ -88,7 +88,7 @@ clang++ main.cpp -L. -lMyString -o a.out
 
 ---
 
-## 지원 메서드, 연산자 및 설명
+# 지원 메서드, 연산자 및 설명
 
 ### `MyString(const char* s);`
 - 생성자
