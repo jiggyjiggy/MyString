@@ -36,7 +36,7 @@
             - 데이터 일관성 문제:
                 - 데이터 일관성 문제, 즉 읽은 값과 실제 사용하는 값이 일치하지 않을 가능성(읽기 작업 중 데이터가 변경되는 문제)을 고려해야 할 것이다.
                 - DBMS 개념으로 설명해보자면,
-                    - 트랜잭션 격리 수준으로 보면, 팬텀 리드(Phantom Read)나 더티 리드(Dirty Read)와 유사한 문제가 발생할 수 있을 것이다.
+                    - 트랜잭션 격리 수준으로 보면, 팬텀 리드(Phantom Read)나 더티 리드(Dirty Read)와 유사한 문제가 발생할 수 있을 것이다. (https://hudi.blog/transaction-isolation-level/)
             - 문제 해결 방안:
                 - 이를 해결하기 위해 `shared_mutex`와 `shared_lock`을 사용하는 것이 적합하다.
                 - why:
