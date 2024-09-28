@@ -28,7 +28,7 @@
                 - 해제를 직접하지 않더라도, 해제되기 때문에 안전 신경쓰는 비용을 줄일 수 있음
                     - 예외가 발생하는 경우에도 자동으로 해제되도록 보장해준다
             - 따라서, `lock_guard`를 적용
-    - 더 나은 고려사항
+    - 추가적인 개선 방안
         - 읽기-쓰기 분리
             - 성능 향상: 읽기-쓰기 패턴이 빈번히 발생하는 경우, 읽기 작업과 쓰기 작업을 분리하여 성능을 향상시킬 수 있다.
                 - 동시성 제어: 읽기 작업은 여러 스레드가 동시에 수행할 수 있도록 허용하고, 쓰기 작업은 단일 스레드만 수행하여 데이터 일관성을 보장한다.
@@ -37,6 +37,39 @@
                 - `shared_mutex` 적용 
                     - https://en.cppreference.com/w/cpp/thread/shared_mutex (C++17)
                     - `shared_mutex`: 공유(shared), 배타(exclusive)적 두 가지 수준의 액세스를 지원하는 클래스. 공유 뮤텍스는 공유 데이터가 여러 스레드에 의해 동시에 안전하게 읽힐 수 있는 경우에 특히 유용하지만, 스레드는 다른 스레드가 동시에 읽거나 쓰지 않을 때에만 동일한 데이터를 쓸 수 있다
+                    - `shared_mutex` 예제 코드
+                    ```cpp
+                    class ThreadSafeCounter
+                    {
+                    public:
+                        ThreadSafeCounter() = default;
+                     
+                        // Multiple threads/readers can read the counter's value at the same time.
+                        unsigned int get() const
+                        {
+                            std::shared_lock lock(mutex_);
+                            return value_;
+                        }
+                     
+                        // Only one thread/writer can increment/write the counter's value.
+                        void increment()
+                        {
+                            std::unique_lock lock(mutex_);
+                            ++value_;
+                        }
+                     
+                        // Only one thread/writer can reset/write the counter's value.
+                        void reset()
+                        {
+                            std::unique_lock lock(mutex_);
+                            value_ = 0;
+                        }
+                     
+                    private:
+                        mutable std::shared_mutex mutex_;
+                        unsigned int value_{};
+                    };
+                    ``` 
 
   
 # 정적 라이브러리 
